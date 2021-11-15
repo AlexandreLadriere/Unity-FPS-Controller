@@ -22,7 +22,6 @@ public class PlayerController : MonoBehaviour
     public float gravityAmount;
     private float playerGravity;
     public float gravityMin;
-
     public Vector3 jumpingForce;
     private Vector3 jumpingForceVelocity;
 
