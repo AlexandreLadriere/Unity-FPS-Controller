@@ -2114,7 +2114,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.73, z: 0}
+  m_LocalPosition: {x: 0, y: 0.32, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1552686538}
@@ -25560,7 +25560,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1552686537}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.32, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 963194228}
@@ -26252,6 +26252,8 @@ GameObject:
   - component: {fileID: 1692669416}
   - component: {fileID: 1692669415}
   - component: {fileID: 1692669414}
+  - component: {fileID: 1692669421}
+  - component: {fileID: 1692669420}
   - component: {fileID: 1692669419}
   - component: {fileID: 1692669418}
   m_Layer: 0
@@ -26270,7 +26272,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 1692669413}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.3
   m_Height: 2
   m_Direction: 1
@@ -26282,7 +26284,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1692669413}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -26332,7 +26334,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1692669413}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 23.69, y: 2.4, z: -80.45}
+  m_LocalPosition: {x: 23.69, y: 2.003, z: -80.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1552686538}
@@ -26355,20 +26357,31 @@ MonoBehaviour:
   inputView: {x: 0, y: 0}
   cameraHolder: {fileID: 1552686538}
   playerSettings:
-    viewXSensitivity: 50
-    viewYSensitivity: 50
+    viewXSensitivity: 100
+    viewYSensitivity: 100
     viewXInverted: 0
     viewYInverted: 0
     walkingForwardSpeed: 4
     walkingBackwardSpeed: 2
     walkingStrafeSpeed: 3
     jumpingHeight: 15
-    jumpingFallof: 0.1
+    jumpingFallof: 0.2
   viewClampYMin: -70
   viewClampYMax: 80
   gravityAmount: 0.05
-  gravityMin: -1
+  gravityMin: -3
   jumpingForce: {x: 0, y: 0, z: 0}
+  playerStance: 0
+  playerStanceSmoothing: 0.5
+  playerStandStance:
+    cameraHeight: 0.32
+    stanceCollider: {fileID: 1692669414}
+  playerCrouchStance:
+    cameraHeight: -0.3
+    stanceCollider: {fileID: 1692669421}
+  playerProneStance:
+    cameraHeight: -1
+    stanceCollider: {fileID: 1692669420}
 --- !u!143 &1692669419
 CharacterController:
   m_ObjectHideFlags: 0
@@ -26387,6 +26400,34 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!136 &1692669420
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692669413}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  m_Radius: 0.3
+  m_Height: 0.4
+  m_Direction: 1
+  m_Center: {x: 0, y: -0.7, z: 0}
+--- !u!136 &1692669421
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1692669413}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  m_Radius: 0.3
+  m_Height: 1.4
+  m_Direction: 1
+  m_Center: {x: 0, y: -0.3, z: 0}
 --- !u!1 &1721181614
 GameObject:
   m_ObjectHideFlags: 0
