@@ -5,18 +5,20 @@ public class PlayerController : MonoBehaviour
 {
     private CharacterController characterController;
     private DefaultInput defaultInput;
-    public Vector2 inputMovement;
-    public Vector2 inputView;
+    private Vector2 inputMovement;
+    private Vector2 inputView;
     private Vector3 newCameraRotation;
     private Vector3 newPlayerRotation;
 
     [Header("References")]
     public Transform cameraHolder;
+    public Transform feetTransform;
 
     [Header("Settings")]
     public PlayerSettingsModel playerSettings;
     public float viewClampYMin = -50;
     public float viewClampYMax = 80;
+    public LayerMask playerMask;
 
     [Header("Gravity")]
     public float gravityAmount;
@@ -31,11 +33,10 @@ public class PlayerController : MonoBehaviour
     public CharacterStance playerStandStance;
     public CharacterStance playerCrouchStance;
     public CharacterStance playerProneStance;
+    private float stanceCheckErrorMargin = 0.05f;
     private float cameraHeight;
     private float cameraHeightVelocity;
-    private Vector3 stanceCapsuleCenter;
     private Vector3 stanceCapsuleCenterVelocity;
-    private float stanceCapsuleHeight;
     private float stanceCapsuleHeightVelocity;
 
 
@@ -44,6 +45,8 @@ public class PlayerController : MonoBehaviour
         defaultInput.Player.Movement.performed += e => inputMovement = e.ReadValue<Vector2>();
         defaultInput.Player.View.performed += e => inputView = e.ReadValue<Vector2>();
         defaultInput.Player.Jump.performed += e => Jump();
+        defaultInput.Player.Prone.performed += e => Prone();
+        defaultInput.Player.Crouch.performed += e => Crouch();
         defaultInput.Enable();
         newCameraRotation = cameraHolder.localRotation.eulerAngles;
         newPlayerRotation = transform.localRotation.eulerAngles;
@@ -109,5 +112,29 @@ public class PlayerController : MonoBehaviour
         cameraHolder.localPosition = new Vector3(cameraHolder.localPosition.x, cameraHeight, cameraHolder.localPosition.z);
         characterController.height = Mathf.SmoothDamp(characterController.height, currentStance.stanceCollider.height, ref stanceCapsuleHeightVelocity, playerStanceSmoothing);
         characterController.center = Vector3.SmoothDamp(characterController.center, currentStance.stanceCollider.center, ref stanceCapsuleCenterVelocity, playerStanceSmoothing);
+    }
+
+    private void Crouch() {
+        if(playerStance == PlayerStance.Crouch) {
+            if(StandCheck(playerStandStance.stanceCollider.height)) {
+                return;
+            }
+            playerStance = PlayerStance.Stand;
+            return;
+        }
+        if(StandCheck(playerCrouchStance.stanceCollider.height)) {
+                return;
+            }
+        playerStance = PlayerStance.Crouch;
+    }
+
+    private void Prone() {
+        playerStance = PlayerStance.Prone;
+    }
+
+    private bool StandCheck(float standCheckHeight) {
+        Vector3 start = new Vector3(feetTransform.position.x, feetTransform.position.y + characterController.radius + stanceCheckErrorMargin, feetTransform.position.z);
+        Vector3 end = new Vector3(feetTransform.position.x, feetTransform.position.y - characterController.radius - stanceCheckErrorMargin + standCheckHeight, feetTransform.position.z);
+        return Physics.CheckCapsule(start, end, characterController.radius, playerMask);
     }
 }
