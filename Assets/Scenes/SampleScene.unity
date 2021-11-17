@@ -26391,6 +26391,8 @@ MonoBehaviour:
     viewYSensitivity: 100
     viewXInverted: 0
     viewYInverted: 0
+    runningForwardSpeed: 10
+    runningStrafeSpeed: 10
     walkingForwardSpeed: 4
     walkingBackwardSpeed: 2
     walkingStrafeSpeed: 3

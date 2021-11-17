@@ -38,15 +38,18 @@ public class PlayerController : MonoBehaviour
     private float cameraHeightVelocity;
     private Vector3 stanceCapsuleCenterVelocity;
     private float stanceCapsuleHeightVelocity;
+    private bool isSprinting;
 
 
-    private void Awake() {
+    private void Awake()
+    {
         defaultInput = new DefaultInput();
         defaultInput.Player.Movement.performed += e => inputMovement = e.ReadValue<Vector2>();
         defaultInput.Player.View.performed += e => inputView = e.ReadValue<Vector2>();
         defaultInput.Player.Jump.performed += e => Jump();
         defaultInput.Player.Prone.performed += e => Prone();
         defaultInput.Player.Crouch.performed += e => Crouch();
+        defaultInput.Player.Sprint.performed += e => ToggleSprint();
         defaultInput.Enable();
         newCameraRotation = cameraHolder.localRotation.eulerAngles;
         newPlayerRotation = transform.localRotation.eulerAngles;
@@ -54,14 +57,16 @@ public class PlayerController : MonoBehaviour
         cameraHeight = cameraHolder.localPosition.y;
     }
 
-    private void Update() {
+    private void Update()
+    {
         CalculateView();
         CalculateMovement();
         CalculateJump();
         CalculateStance();
     }
 
-    private void CalculateView() {
+    private void CalculateView()
+    {
         newPlayerRotation.y += playerSettings.viewXSensitivity * (playerSettings.viewXInverted ? -inputView.x : inputView.x) * Time.deltaTime;
         transform.localRotation = Quaternion.Euler(newPlayerRotation);
         newCameraRotation.x += playerSettings.viewYSensitivity * (playerSettings.viewYInverted ? inputView.y : -inputView.y) * Time.deltaTime;
@@ -69,17 +74,31 @@ public class PlayerController : MonoBehaviour
         cameraHolder.localRotation = Quaternion.Euler(newCameraRotation);
     }
 
-    private void CalculateMovement() {
-        float verticalSpeed = playerSettings.walkingForwardSpeed * inputMovement.y * Time.deltaTime;
-        float horizontalSpeed = playerSettings.walkingStrafeSpeed * inputMovement.x * Time.deltaTime;
-        Vector3 newMovementSpeed = new Vector3(horizontalSpeed, 0, verticalSpeed);
+    private void CalculateMovement()
+    {
+        if (inputMovement.y <= 0.2f)
+        {
+            isSprinting = false;
+        }
+        float verticalSpeed = playerSettings.walkingForwardSpeed;
+        float horizontalSpeed = playerSettings.walkingStrafeSpeed;
+
+        if (isSprinting)
+        {
+            verticalSpeed = playerSettings.runningForwardSpeed;
+            horizontalSpeed = playerSettings.runningStrafeSpeed;
+        }
+
+        Vector3 newMovementSpeed = new Vector3(horizontalSpeed * inputMovement.x * Time.deltaTime, 0, verticalSpeed * inputMovement.y * Time.deltaTime);
         newMovementSpeed = transform.TransformDirection(newMovementSpeed);
 
-        if(playerGravity > gravityMin) {
+        if (playerGravity > gravityMin)
+        {
             playerGravity -= gravityAmount * Time.deltaTime;
         }
-        
-        if(playerGravity < -0.1f && characterController.isGrounded) {
+
+        if (playerGravity < -0.1f && characterController.isGrounded)
+        {
             playerGravity = -0.1f;
         }
         newMovementSpeed.y += playerGravity;
@@ -87,54 +106,86 @@ public class PlayerController : MonoBehaviour
         characterController.Move(newMovementSpeed);
     }
 
-    private void CalculateJump() {
+    private void CalculateJump()
+    {
         jumpingForce = Vector3.SmoothDamp(jumpingForce, Vector3.zero, ref jumpingForceVelocity, playerSettings.jumpingFallof);
     }
 
-    private void Jump() {
-        if (!characterController.isGrounded) {
+    private void Jump()
+    {
+        if (!characterController.isGrounded)
+        {
+            return;
+        }
+        else if (playerStance == PlayerStance.Crouch)
+        {
+            playerStance = PlayerStance.Stand; // Make the player stand if the player tries to jump while crouching
+            return;
+        }
+        else if (playerStance == PlayerStance.Prone)
+        {
+            playerStance = PlayerStance.Stand; // Make the player stand if the player tries to jump while proning
             return;
         }
         jumpingForce = Vector3.up * playerSettings.jumpingHeight;
         playerGravity = 0;
     }
 
-    private void CalculateStance() {
+    private void CalculateStance()
+    {
         CharacterStance currentStance = playerStandStance;
-        if(playerStance == PlayerStance.Crouch) {
+        if (playerStance == PlayerStance.Crouch)
+        {
             currentStance = playerCrouchStance;
         }
-        else if(playerStance == PlayerStance.Prone) {
+        else if (playerStance == PlayerStance.Prone)
+        {
             currentStance = playerProneStance;
         }
-        
+
         cameraHeight = Mathf.SmoothDamp(cameraHolder.localPosition.y, currentStance.cameraHeight, ref cameraHeightVelocity, playerStanceSmoothing);
         cameraHolder.localPosition = new Vector3(cameraHolder.localPosition.x, cameraHeight, cameraHolder.localPosition.z);
         characterController.height = Mathf.SmoothDamp(characterController.height, currentStance.stanceCollider.height, ref stanceCapsuleHeightVelocity, playerStanceSmoothing);
         characterController.center = Vector3.SmoothDamp(characterController.center, currentStance.stanceCollider.center, ref stanceCapsuleCenterVelocity, playerStanceSmoothing);
     }
 
-    private void Crouch() {
-        if(playerStance == PlayerStance.Crouch) {
-            if(StandCheck(playerStandStance.stanceCollider.height)) {
+    private void Crouch()
+    {
+        if (playerStance == PlayerStance.Crouch)
+        {
+            if (StandCheck(playerStandStance.stanceCollider.height))
+            {
                 return;
             }
             playerStance = PlayerStance.Stand;
             return;
         }
-        if(StandCheck(playerCrouchStance.stanceCollider.height)) {
-                return;
-            }
+        if (StandCheck(playerCrouchStance.stanceCollider.height))
+        {
+            return;
+        }
         playerStance = PlayerStance.Crouch;
     }
 
-    private void Prone() {
+    private void Prone()
+    {
         playerStance = PlayerStance.Prone;
     }
 
-    private bool StandCheck(float standCheckHeight) {
+    private bool StandCheck(float standCheckHeight)
+    {
         Vector3 start = new Vector3(feetTransform.position.x, feetTransform.position.y + characterController.radius + stanceCheckErrorMargin, feetTransform.position.z);
         Vector3 end = new Vector3(feetTransform.position.x, feetTransform.position.y - characterController.radius - stanceCheckErrorMargin + standCheckHeight, feetTransform.position.z);
         return Physics.CheckCapsule(start, end, characterController.radius, playerMask);
+    }
+
+    private void ToggleSprint()
+    {
+        if (inputMovement.y <= 0.2f)
+        {
+            isSprinting = false;
+            return;
+        }
+        isSprinting = !isSprinting;
     }
 }
