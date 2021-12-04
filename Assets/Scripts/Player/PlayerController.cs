@@ -188,11 +188,13 @@ public class PlayerController : MonoBehaviour
             return;
         }
         playerStance = PlayerStance.Crouch;
+        isSprinting = false;
     }
 
     private void Prone()
     {
         playerStance = PlayerStance.Prone;
+        isSprinting = false;
     }
 
     private bool StandCheck(float standCheckHeight)
