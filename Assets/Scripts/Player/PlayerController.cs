@@ -204,7 +204,10 @@ public class PlayerController : MonoBehaviour
 
     private void ToggleSprint()
     {
-        if (inputMovement.y <= 0.2f || playerStance == PlayerStance.Crouch || playerStance == PlayerStance.Prone)
+        if(playerStance == PlayerStance.Prone || playerStance == PlayerStance.Crouch) {
+            playerStance = PlayerStance.Stand;
+        }
+        if (inputMovement.y <= 0.2f)
         {
             isSprinting = false;
             return;
