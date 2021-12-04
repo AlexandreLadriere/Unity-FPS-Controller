@@ -92,7 +92,23 @@ public class PlayerController : MonoBehaviour
             horizontalSpeed = playerSettings.runningStrafeSpeed;
         }
 
-        newMovementSpeed = Vector3.SmoothDamp(newMovementSpeed, new Vector3(horizontalSpeed * inputMovement.x * Time.deltaTime, 0, verticalSpeed * inputMovement.y * Time.deltaTime), ref newMovementSpeedVelocity, playerSettings.movementSmoothing);
+        // Effectors
+        if (!characterController.isGrounded) {
+            playerSettings.speedEffector = playerSettings.fallingSpeedEffector;
+        }
+        else if (playerStance == PlayerStance.Crouch) {
+            playerSettings.speedEffector = playerSettings.crouchSpeedEffector;
+        }
+        else if (playerStance == PlayerStance.Prone) {
+            playerSettings.speedEffector = playerSettings.proneSpeedEffector;
+        }
+        else {
+            playerSettings.speedEffector = 1;
+        }
+        verticalSpeed *= playerSettings.speedEffector;
+        horizontalSpeed *= playerSettings.speedEffector;
+
+        newMovementSpeed = Vector3.SmoothDamp(newMovementSpeed, new Vector3(horizontalSpeed * inputMovement.x * Time.deltaTime, 0, verticalSpeed * inputMovement.y * Time.deltaTime), ref newMovementSpeedVelocity, characterController.isGrounded ? playerSettings.movementSmoothing : playerSettings.fallingSmoothing);
         var movementSpeed = transform.TransformDirection(newMovementSpeed);
 
         if (playerGravity > gravityMin)
@@ -122,6 +138,10 @@ public class PlayerController : MonoBehaviour
         }
         else if (playerStance == PlayerStance.Crouch)
         {
+            if (StandCheck(playerStandStance.stanceCollider.height))
+            {
+                return;
+            }
             playerStance = PlayerStance.Stand; // Make the player stand if the player tries to jump while crouching
             return;
         }
