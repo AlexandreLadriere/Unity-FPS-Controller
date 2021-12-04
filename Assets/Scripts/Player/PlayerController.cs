@@ -39,6 +39,8 @@ public class PlayerController : MonoBehaviour
     private Vector3 stanceCapsuleCenterVelocity;
     private float stanceCapsuleHeightVelocity;
     private bool isSprinting;
+    private Vector3 newMovementSpeed;
+    private Vector3 newMovementSpeedVelocity;
 
 
     private void Awake()
@@ -50,6 +52,7 @@ public class PlayerController : MonoBehaviour
         defaultInput.Player.Prone.performed += e => Prone();
         defaultInput.Player.Crouch.performed += e => Crouch();
         defaultInput.Player.Sprint.performed += e => ToggleSprint();
+        defaultInput.Player.SprintReleased.performed += e => StopSprint();
         defaultInput.Enable();
         newCameraRotation = cameraHolder.localRotation.eulerAngles;
         newPlayerRotation = transform.localRotation.eulerAngles;
@@ -89,8 +92,8 @@ public class PlayerController : MonoBehaviour
             horizontalSpeed = playerSettings.runningStrafeSpeed;
         }
 
-        Vector3 newMovementSpeed = new Vector3(horizontalSpeed * inputMovement.x * Time.deltaTime, 0, verticalSpeed * inputMovement.y * Time.deltaTime);
-        newMovementSpeed = transform.TransformDirection(newMovementSpeed);
+        newMovementSpeed = Vector3.SmoothDamp(newMovementSpeed, new Vector3(horizontalSpeed * inputMovement.x * Time.deltaTime, 0, verticalSpeed * inputMovement.y * Time.deltaTime), ref newMovementSpeedVelocity, playerSettings.movementSmoothing);
+        var movementSpeed = transform.TransformDirection(newMovementSpeed);
 
         if (playerGravity > gravityMin)
         {
@@ -101,9 +104,9 @@ public class PlayerController : MonoBehaviour
         {
             playerGravity = -0.1f;
         }
-        newMovementSpeed.y += playerGravity;
-        newMovementSpeed += jumpingForce * Time.deltaTime;
-        characterController.Move(newMovementSpeed);
+        movementSpeed.y += playerGravity;
+        movementSpeed += jumpingForce * Time.deltaTime;
+        characterController.Move(movementSpeed);
     }
 
     private void CalculateJump()
@@ -187,5 +190,12 @@ public class PlayerController : MonoBehaviour
             return;
         }
         isSprinting = !isSprinting;
+    }
+
+    private void StopSprint()
+    {
+        if(playerSettings.sprintingHold) {
+            isSprinting = false;
+        }
     }
 }
